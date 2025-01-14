@@ -48,8 +48,16 @@ app.delete("/api/shopping/:id",function(req,res) {
 	return res.status(200).json({"Message":"Success"})
 })
 
+//Update item using id. We use Array.prototype.splice to change the existing item to new one.
+
 app.put("/api/shopping/:id",function(req,res) {
 	let tempId = parseInt(req.params.id);
+	let item = {
+		id:tempId,
+		type:req.body.type,
+		count:req.body.count,
+		price:req.body.price
+	}
 	for(let i=0;i<database.length;i++) {
 		if(tempId === database[i].id) {
 			database.splice(i,1,item);
