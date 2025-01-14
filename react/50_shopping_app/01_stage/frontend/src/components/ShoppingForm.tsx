@@ -45,12 +45,14 @@ const ShoppingForm = (props:Props) => {
 				<input type="text"
 						name="type"
 						id="type"
+						className="form-control"
 						onChange={onChange}
 						value={state.type}/>
 				<label htmlFor="count" className="form-label">Count</label>
 				<input type="number"
 						name="count"
 						id="count"
+						className="form-control"
 						onChange={onChange}
 						value={state.count}/>
 				<label htmlFor="price" className="form-label">Price</label>
@@ -58,9 +60,10 @@ const ShoppingForm = (props:Props) => {
 						name="price"
 						id="price"
 						step="0.01"
+						className="form-control"
 						onChange={onChange}
 						value={state.price}/>
-				<input type="submit" value="Add"/>
+				<input type="submit" value="Add" className="btn btn-primary"/>
 			</form>
 		</div>
 	)
