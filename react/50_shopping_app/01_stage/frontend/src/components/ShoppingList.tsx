@@ -34,7 +34,7 @@ const ShoppingList = (props:Props) => {
 			case "edit":{
 				setState({
 					removeIndex:-1,
-					editIndex:number
+					editIndex:index
 				})
 				return;
 			}
