@@ -57,7 +57,7 @@ const useAction = () => {
 	}
 	
 	const clearState = (error:string) => {
-		setState(
+		setState((state) => {
 			let tempState:AppState ={
 				list:[],
 				token:"",
@@ -68,12 +68,12 @@ const useAction = () => {
 			}
 			saveToStorage(tempState);
 			return tempState;
-		)
+		})
 	}
 	
 	const setUser = (user:string) => {
 		setState((state) => {
-			let tempState:AppState {
+			let tempState:AppState = {
 				...state,
 				user:user
 			}
@@ -178,7 +178,7 @@ const useAction = () => {
 					case "getlist":
 					case "additem":
 					case "removeitem":
-					case "edititem"
+					case "edititem":
 					case "login":
 						setError(errorMessage);
 						return;
@@ -228,7 +228,7 @@ const useAction = () => {
 			request:new Request("/api/shopping/"+id,{
 				method:"DELETE",
 				headers:{
-					"token":token
+					"token":state.token
 				}
 			}),
 			action:"removeitem"
@@ -241,7 +241,7 @@ const useAction = () => {
 				method:"PUT",
 				headers:{
 					"Content-Type":"application/json",
-					"token":token
+					"token":state.token
 				},
 				body:JSON.stringify(item)
 			}),
@@ -252,7 +252,7 @@ const useAction = () => {
 	//LOGIN API
 	
 	const register = (user:User) => {
-		setUrlRequest(
+		setUrlRequest({
 			request: new Request("/register",{
 				method:"POST",
 				headers:{
@@ -266,7 +266,7 @@ const useAction = () => {
 
 	const login = (user:User) => {
 		setUser(user.username);
-		setUrlRequest(
+		setUrlRequest({
 			request: new Request("/login",{
 				method:"POST",
 				headers:{
