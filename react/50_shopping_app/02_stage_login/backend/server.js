@@ -34,6 +34,44 @@ createToken = () => {
 	return token.toString("hex");
 }
 
+//Middleware to authorize and personalize requests for CRUD under /api. We check for the
+//existence of authentication token that the user gets from login. If the token exists
+//and is valid (alive) request is personalized for that specific user and passed on to
+//shoppingroute. Otherwise 403 forbidden is returned.
+
+isUserLogged = (req,res,next) => {
+	if(!req.headers.token) {
+		return res.status(403).json({"Message":"Forbidden"});
+	}
+	sessionModel.findOne({"token":req.headers.token}).then(function(session) {
+		if(!session) {
+			return res.status(403).json({"Message":"Forbidden"});
+		}
+		let now = Date.now();
+		if(now > session.ttl) {
+			sessionModel.deleteOne({"_id":session._id}).then(function(){
+				return res.status(403).json({"Message":"Forbidden"});
+			}).catch(function(err) {
+				console.log("Failed to delete session. Reason:",err);
+				return res.status(403).json({"Message":"Forbidden"});
+			})
+		} else {
+			session.ttl = now + time_to_live_diff;
+			req.session = {};
+			req.session.user = session.user;
+			session.save().then(function() {
+				return next();
+			}).catch(function(err) {
+				console.log("Failed to resave session. Reason",err);
+				return next();
+			})
+		}
+	}).catch(function(err) {
+		console.log("Failed to find session. Reason:",err);
+		return res.status(403).json({"Message":"Forbidden"});
+	})
+}
+
 //LOGIN API
 
 app.post("/register",function(req,res) {
@@ -107,7 +145,9 @@ app.post("/login",function(req,res) {
 	})
 })
 
-app.use("/api",shoppingroute);
+//isUserLogged is used here!!
+
+app.use("/api",isUserLogged,shoppingroute);
 
 console.log("Running in port 3000");
 
