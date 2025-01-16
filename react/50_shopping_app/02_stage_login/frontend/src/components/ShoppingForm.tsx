@@ -30,7 +30,7 @@ const ShoppingForm = (props:Props) => {
 	
 	const onSubmit = (event:React.SyntheticEvent) => {
 		event.preventDefault();
-		let item = new ShoppingItem(state.type,state.count,state.price,0);
+		let item = new ShoppingItem(state.type,state.count,state.price,"");
 		props.add(item);
 		setState({
 			type:"",

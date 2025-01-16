@@ -6,7 +6,7 @@ import EditRow from './EditRow';
 
 interface Props {
 	list:ShoppingItem[];
-	remove(id:number):void;
+	remove(id:string):void;
 	edit(item:ShoppingItem):void;
 }
 
@@ -51,7 +51,7 @@ const ShoppingList = (props:Props) => {
 		}
 	}
 	
-	const removeItem = (id:number) => {
+	const removeItem = (id:string) => {
 		props.remove(id);
 		changeMode("cancel",0);
 	}

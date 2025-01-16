@@ -223,7 +223,7 @@ const useAction = () => {
 		})
 	}
 	
-	const remove = (id:number) => {
+	const remove = (id:string) => {
 		setUrlRequest({
 			request:new Request("/api/shopping/"+id,{
 				method:"DELETE",
@@ -293,7 +293,7 @@ const useAction = () => {
 	
 	//We return the state and API functions to be used by components
 	
-	return {state,getList,add,remove,edit,register,login,logout}
+	return {state,setError,getList,add,remove,edit,register,login,logout}
 }
 
 export default useAction;
