@@ -145,6 +145,19 @@ app.post("/login",function(req,res) {
 	})
 })
 
+app.post("/logout",function(req,res) {
+	if(!req.headers.token) {
+		return res.status(404).json({"Message":"Not found"})
+	} else {
+		sessionModel.deleteOne({"token":req.headers.token}).then(function() {
+			return res.status(200).json({"Message":"Logged out"})
+		}).catch(function(err) {
+			console.log("Failed to remove session with token:",req.headers.token);
+			return res.status(500).json({"Message":"Internal Server Error"})
+		})
+	}
+})
+
 //isUserLogged is used here!!
 
 app.use("/api",isUserLogged,shoppingroute);
