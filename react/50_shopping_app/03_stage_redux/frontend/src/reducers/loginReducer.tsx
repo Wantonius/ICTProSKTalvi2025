@@ -66,7 +66,7 @@ const loginReducer:Reducer<LoginState,Action> = (state = initialState,action):Lo
 				error = action.payload as string;
 			}
 			tempState = {
-				...state
+				...state,
 				error:error
 			}
 			saveToStorage(tempState);
@@ -82,15 +82,15 @@ const loginReducer:Reducer<LoginState,Action> = (state = initialState,action):Lo
 			saveToStorage(tempState);
 			return tempState;
 		case actionConstants.LOGOUT_FAILED:
-			let error = "";
+			let error2 = "";
 			if(action.payload) {
-				error = action.payload as string;
+				error2 = action.payload as string;
 			}
 			tempState = {
 				loading:false,
 				isLogged:false,
 				token:"",
-				error:error,
+				error:error2,
 				user:""
 			}
 			saveToStorage(tempState);
