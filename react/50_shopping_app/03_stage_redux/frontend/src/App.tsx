@@ -1,14 +1,27 @@
-import useAction from './hooks/useAction';
+import {useSelector} from 'react-redux';
+import {AppState} from './types/states';
 import ShoppingForm from './components/ShoppingForm';
 import ShoppingList from './components/ShoppingList';
 import Navbar from './components/Navbar';
 import LoginPage from './components/LoginPage';
 import {Routes,Route,Navigate} from 'react-router';
-import {useEffect} from 'react';
+
 
 function App() {
 
-	const {state,edit,remove,add,getList,setError,register,login,logout} = useAction();
+	const stateSelector = (state:AppState) => {
+		let error = state.shopping.error
+		if(state.login.error) {
+			error = state.login.error
+		}
+		return {
+			error:error,
+			loading:state.login.loading,
+			isLogged:state.login.isLogged
+		}
+	}
+	
+	const state = useSelector(stateSelector);
 	
 	let messageArea = <h4 style={{"height":20,"textAlign":"center"}}></h4>
 	if(state.loading) {
@@ -20,11 +33,11 @@ function App() {
 	if(state.isLogged) {
 		return (
 		<>
-			<Navbar logout={logout} isLogged={state.isLogged} user={state.user}/>
+			<Navbar />
 				{messageArea}
 			<Routes>
-				<Route path="/" element={<ShoppingList list={state.list} remove={remove} edit={edit} />}/>
-				<Route path="/form" element={<ShoppingForm add={add}/>}/>
+				<Route path="/" element={<ShoppingList  />}/>
+				<Route path="/form" element={<ShoppingForm />}/>
 				<Route path="*" element={<Navigate to="/"/>}/>
 			</Routes>
 		</>
@@ -32,10 +45,10 @@ function App() {
 	} else {
 		return (
 		<>
-			<Navbar logout={logout} isLogged={state.isLogged} user={state.user}/>
+			<Navbar />
 				{messageArea}
 			<Routes>
-				<Route path="/" element={<LoginPage register={register} login={login} setError={setError}/>}/>
+				<Route path="/" element={<LoginPage />}/>
 				<Route path="*" element={<Navigate to="/"/>}/>
 			</Routes>
 		</>
