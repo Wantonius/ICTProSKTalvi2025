@@ -2,6 +2,7 @@ import {Component,OnInit} from '@angular/core';
 import {LoginService} from '../services/login.service';
 import {User} from '../models/user.model';
 import {FormsModule} from '@angular/forms';
+import {Router} from '@angular/router';
 
 @Component({
 	selector:"loginpage",
@@ -15,10 +16,12 @@ export class LoginPage implements OnInit {
 	user:User = new User("","");
 	message:string = "";
 	
-	constructor(private loginService:LoginService) {}
+	constructor(private loginService:LoginService,private router:Router) {}
 	
 	ngOnInit() {
-		
+		if(this.loginService.isUserLogged()) {
+			this.router.navigate(["list"])
+		}
 	}
 	
 	register() {
@@ -40,7 +43,7 @@ export class LoginPage implements OnInit {
 			next:(data) => {
 				this.message = "Login success";
 				this.loginService.setLoginState(true,data.token)
-				//router here
+				this.router.navigate(["list"])
 			},
 			error:(error) => this.message = error.message,
 			complete:() => console.log("Login done")
