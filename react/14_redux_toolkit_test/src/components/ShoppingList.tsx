@@ -3,12 +3,16 @@ import ShoppingItem from '../models/ShoppingItem';
 import Row from './Row';
 import RemoveRow from './RemoveRow';
 import EditRow from './EditRow';
-import useAction from '../hooks/useAction';
-import useAppState from '../hooks/useAppState';
-
+import {useDispatch,useSelector} from 'react-redux';
+import {remove,edit} from '../store/shoppingSlice';
+import type {PayloadAction,ThunkDispatch} from '@reduxjs/toolkit';
 interface State {
 	removeIndex:number;
 	editIndex:number;
+}
+
+interface AppState {
+	list:ShoppingItem[];
 }
 
 const ShoppingList = () => {
@@ -18,8 +22,11 @@ const ShoppingList = () => {
 		editIndex:-1
 	})
 	
-	const {list} = useAppState();
-	const {remove,edit} = useAction();
+	const dispatch:ThunkDispatch<any,any,PayloadAction> = useDispatch();
+	
+	const listSelector = (state:AppState) => state.list;
+	
+	const list = useSelector(listSelector);
 	
 	const changeMode = (mode:string,index:number) => {
 		switch(mode) {
@@ -50,13 +57,13 @@ const ShoppingList = () => {
 		}
 	}
 	
-	const removeItem = (id:string) => {
-		remove(id);
+	const removeItem = (id:number) => {
+		dispatch(remove(id));
 		changeMode("cancel",0);
 	}
 	
 	const editItem = (item:ShoppingItem) => {
-		edit(item);
+		dispatch(edit(item));
 		changeMode("cancel",0);
 	}
 	

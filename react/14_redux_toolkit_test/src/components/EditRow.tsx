@@ -1,6 +1,11 @@
 import React,{useState} from 'react';
 import ShoppingItem from '../models/ShoppingItem';
-import useAction from '../hooks/useAction';
+
+interface Props {
+	item:ShoppingItem;
+	editItem(item:ShoppingItem):void;
+	changeMode(mode:string,index:number):void;
+}
 
 interface State {
 	type:string;
@@ -8,16 +13,13 @@ interface State {
 	price:number;
 }
 
-
-const ShoppingForm = () => {
+const EditRow = (props:Props) => {
 	
 	const [state,setState] = useState<State>({
-		type:"",
-		count:0,
-		price:0
+		type:props.item.type,
+		count:props.item.count,
+		price:props.item.price
 	})
-	
-	const {add} = useAction();
 	
 	const onChange = (event:React.ChangeEvent<HTMLInputElement>) => {
 		setState((state) => {
@@ -28,45 +30,41 @@ const ShoppingForm = () => {
 		})
 	}
 	
-	const onSubmit = (event:React.SyntheticEvent) => {
-		event.preventDefault();
-		let item = new ShoppingItem(state.type,state.count,state.price,"");
-		add(item);
-		setState({
-			type:"",
-			count:0,
-			price:0
-		})
+	const editItem = () => {
+		let item = new ShoppingItem(state.type,state.count,state.price,props.item.id);
+		props.editItem(item);
 	}
-	return(
-		<div style={{"width":"40%","backgroundColor":"pink","margin":"auto","textAlign":"center"}}>
-			<form onSubmit={onSubmit} className="m-5">
-				<label htmlFor="type" className="form-label">Type</label>
+	return (
+		<tr>
+			<td>
 				<input type="text"
 						name="type"
 						id="type"
 						className="form-control"
 						onChange={onChange}
 						value={state.type}/>
-				<label htmlFor="count" className="form-label">Count</label>
+			</td>
+			<td>
 				<input type="number"
 						name="count"
 						id="count"
 						className="form-control"
 						onChange={onChange}
 						value={state.count}/>
-				<label htmlFor="price" className="form-label">Price</label>
+			</td>
+			<td>
 				<input type="number"
 						name="price"
 						id="price"
-						step="0.01"
 						className="form-control"
+						step="0.01"
 						onChange={onChange}
 						value={state.price}/>
-				<input type="submit" value="Add" className="btn btn-primary"/>
-			</form>
-		</div>
+			</td>
+			<td><button className="btn btn-success" onClick={editItem}>Save</button></td>
+			<td><button className="btn btn-danger" onClick={() => props.changeMode("cancel",0)}>Cancel</button></td>
+		</tr>
 	)
 }
 
-export default ShoppingForm;
+export default EditRow;

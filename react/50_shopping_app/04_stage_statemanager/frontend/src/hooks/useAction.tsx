@@ -1,7 +1,10 @@
 import ShoppingItem from '../models/ShoppingItem';
 import User from '../models/User';
-import {AppState} from '../types/states';
-import {useState,useEffect} from 'react';
+import AppState from '../types/states';
+import {useState,useEffect,useContext} from 'react';
+import * as actionConstants from '../types/actionConstants';
+import useAppState from './useAppState';
+import ActionContext from '../context/ActionContext';
 
 //For triggering the useEffect that calls fetch and the backend we need a state that
 //holds url and request information
@@ -22,82 +25,19 @@ const useAction = () => {
 		action:""
 	})
 	
-	//Application state containing the database and login information from backend
+	const {dispatch} = useContext(ActionContext);
 	
-	const [state,setState] = useState<AppState>({
-		list:[],
-		token:"",
-		isLogged:false,
-		loading:false,
-		error:"",
-		user:""
-	})
+	const {token} = useAppState();
 	
 	//Helper functions to facilitate state changes
 	
 	const setError = (error:string) => {
-		setState((state) => {
-			let tempState:AppState = {
-				...state,
-				error:error
-			}
-			saveToStorage(tempState);
-			return tempState;
+		dispatch({
+			type:actionConstants.REGISTER_FAILED,
+			payload:error
 		})
 	}
 	
-	const setLoading = (loading:boolean) => {
-		setState((state) => {
-			return {
-				...state,
-				loading:loading,
-				error:""
-			}
-		})
-	}
-	
-	const clearState = (error:string) => {
-		setState((state) => {
-			let tempState:AppState ={
-				list:[],
-				token:"",
-				isLogged:false,
-				loading:false,
-				error:error,
-				user:""
-			}
-			saveToStorage(tempState);
-			return tempState;
-		})
-	}
-	
-	const setUser = (user:string) => {
-		setState((state) => {
-			let tempState:AppState = {
-				...state,
-				user:user
-			}
-			saveToStorage(tempState);
-			return tempState;
-		})
-	}
-	
-	//Saving state changes to sessionstorage and retrieving them on reload
-	
-	const saveToStorage = (state:AppState) => {
-		sessionStorage.setItem("state",JSON.stringify(state));
-	}
-	
-	useEffect(() => {
-		let temp = sessionStorage.getItem("state");
-		if(temp) {
-			let state:AppState = JSON.parse(temp);
-			setState(state);
-			if(state.isLogged) {
-				getList(state.token);
-			}
-		}
-	},[])
 	
 	//Effect gets triggered by changes in request. This is done by API functions which
 	//correspond to backend functionalities. So we will have getList,add,remove and edit
@@ -110,11 +50,18 @@ const useAction = () => {
 			if(urlRequest.action === "") {
 				return;
 			}
-			setLoading(true);
+			dispatch({
+				type:actionConstants.LOADING
+			})
 			const response = await fetch(urlRequest.request)
-			setLoading(false);
+			dispatch({
+				type:actionConstants.STOP_LOADING
+			})
 			if(!response) {
-				console.log("Server sent no response")
+				dispatch({
+					type:actionConstants.LOGOUT_FAILED,
+					payload:"Server never responded. Resetting."
+				})
 				return;
 			}
 			if(response.ok) {
@@ -122,49 +69,70 @@ const useAction = () => {
 					case "getlist":
 						let data = await response.json();
 						if(!data) {
-							console.log("Failed to parse json");
+							dispatch({
+								type:actionConstants.FETCH_LIST_FAILED,
+								payload:"Failed to parse information. Try again later."
+							})
 							return;
 						}
-						setState((state) => {
-							let tempState:AppState = {
-								...state,
-								list:data
-							}
-							saveToStorage(tempState);
-							return tempState;
+						let list:ShoppingItem[] = data as ShoppingItem[];
+						dispatch({
+							type:actionConstants.FETCH_LIST_SUCCESS,
+							payload:list
 						})
 						return;
 					case "additem":
+						dispatch({
+							type:actionConstants.ADD_ITEM_SUCCESS
+						})
+						getList(token);
+						return;
 					case "removeitem":
+						dispatch({
+							type:actionConstants.REMOVE_ITEM_SUCCESS
+						})
+						getList(token);
+						return;
 					case "edititem":
-						getList(state.token);
+						dispatch({
+							type:actionConstants.EDIT_ITEM_SUCCESS
+						})
+						getList(token);
 						return;
 					case "register":
-						setError("Register Success!");
+						dispatch({
+							type:actionConstants.REGISTER_SUCCESS
+						})
 						return;
 					case "login":
 						let temp = await response.json();
-						let token = temp as Token;
-						setState((state) => {
-							let tempState:AppState = {
-								...state,
-								token:token.token,
-								isLogged:true
-							}
-							saveToStorage(tempState);
-							return tempState;
+						if(!temp) {
+							dispatch({
+								type:actionConstants.LOGIN_FAILED,
+								payload:"Failed to parse login information. Try again later."
+							})
+							return;
+						}
+						let data2 = temp as Token;
+						dispatch({
+							type:actionConstants.LOGIN_SUCCESS,
+							payload:data2.token
 						})
-						getList(token.token);
 						return;
 					case "logout":
-						clearState("");
+						dispatch({
+							type:actionConstants.LOGOUT_SUCCESS
+						})
 						return;
 					default:
 						return;
 				}
 			} else {
 				if(response.status === 403) {
-					clearState("Your session has expired. Logging you out!");
+					dispatch({
+						type:actionConstants.LOGOUT_FAILED,
+						payload:"Your session has expired."
+					})
 					return;
 				}
 				let errorMessage = "Server responded with a status "+response.status+" "+response.statusText;
@@ -173,17 +141,46 @@ const useAction = () => {
 						if(response.status === 409) {
 							errorMessage = "Username already in use";
 						}
-						setError(errorMessage);
+						dispatch({
+							type:actionConstants.REGISTER_FAILED,
+							payload:errorMessage
+						})
 						return;
 					case "getlist":
+						dispatch({
+							type:actionConstants.FETCH_LIST_FAILED,
+							payload:errorMessage
+						})
+						return;
 					case "additem":
+						dispatch({
+							type:actionConstants.ADD_ITEM_FAILED,
+							payload:errorMessage
+						})
+						return;
 					case "removeitem":
+						dispatch({
+							type:actionConstants.REMOVE_ITEM_FAILED,
+							payload:errorMessage
+						})
+						return;
 					case "edititem":
+						dispatch({
+							type:actionConstants.EDIT_ITEM_FAILED,
+							payload:errorMessage
+						})
+						return;
 					case "login":
-						setError(errorMessage);
+						dispatch({
+							type:actionConstants.LOGIN_FAILED,
+							payload:errorMessage
+						})
 						return;
 					case "logout":
-						clearState("Server responded with an error. Logging you out.");
+						dispatch({
+							type:actionConstants.LOGOUT_FAILED,
+							payload:"Server responded with an error. Logging you out."
+						})
 						return;
 					default:
 						return;
@@ -215,7 +212,7 @@ const useAction = () => {
 				method:"POST",
 				headers:{
 					"Content-type":"application/json",
-					"token":state.token
+					"token":token
 				},
 				body:JSON.stringify(item)
 			}),
@@ -228,7 +225,7 @@ const useAction = () => {
 			request:new Request("/api/shopping/"+id,{
 				method:"DELETE",
 				headers:{
-					"token":state.token
+					"token":token
 				}
 			}),
 			action:"removeitem"
@@ -241,7 +238,7 @@ const useAction = () => {
 				method:"PUT",
 				headers:{
 					"Content-Type":"application/json",
-					"token":state.token
+					"token":token
 				},
 				body:JSON.stringify(item)
 			}),
@@ -265,7 +262,10 @@ const useAction = () => {
 	}
 
 	const login = (user:User) => {
-		setUser(user.username);
+		dispatch({
+			type:actionConstants.SET_USER,
+			payload:user.username
+		})
 		setUrlRequest({
 			request: new Request("/login",{
 				method:"POST",
@@ -283,7 +283,7 @@ const useAction = () => {
 			request:new Request("/logout",{
 				method:"POST",
 				headers:{
-					"token":state.token
+					"token":token
 				}
 			}),
 			action:"logout"
@@ -293,7 +293,7 @@ const useAction = () => {
 	
 	//We return the state and API functions to be used by components
 	
-	return {state,setError,getList,add,remove,edit,register,login,logout}
+	return {setError,getList,add,remove,edit,register,login,logout}
 }
 
 export default useAction;
