@@ -128,7 +128,8 @@ app.post("/login",passport.authenticate("local-login"),function(req,res) {
 app.post("/logout",function(req,res) {
 	if(req.session) {
 		req.logout(function(err) {
-			req.session.destroy();
+		
+		req.session.destroy();
 			return res.status(200).json({"Message":"Logged out"})
 		})
 	} else {
